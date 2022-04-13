@@ -1,0 +1,17 @@
+# Project exclude paths
+/node_modules/
+/.gradle/
+/.idea/
+/test/
+/test*.*
+
+*.tgz
+/logs
+/config/config.json
+/db.db
+*.js
+/*.xml
+/.pnpm-debug.log
+/pnpm-lock.yaml
+/package-lock.json
+/logs/

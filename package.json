@@ -1,0 +1,26 @@
+{
+	"name": "nodejsbot",
+	"version": "1.0",
+	"description": "demo",
+	"engines": {
+		"node": ">=16"
+	},
+	"main": "index.js",
+	"type": "commonjs",
+	"scripts": {
+		"build": "tsc",
+		"prestart": "tsc",
+		"start": "node ipsort.js"
+	},
+	"keywords": [
+		"demo"
+	],
+	"author": "bin",
+	"license": "MIT",
+	"devDependencies": {
+		"@types/node": "^16.11.10"
+	},
+	"dependencies": {
+	},
+	"private": true
+}
