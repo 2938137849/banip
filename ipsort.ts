@@ -1,21 +1,20 @@
-import {createWriteStream, readFileSync, opendirSync, Dir} from "fs";
-import {readFile} from "fs/promises";
+import {createWriteStream, Dir} from "fs";
+import {opendir, readFile} from "fs/promises";
 
 const dirPath = "./logs/";
-!async function () {
-	const dir: Dir = opendirSync(dirPath);
+opendir(dirPath).then(async (dir: Dir) => {
 	for await (let dirElement of dir) {
 		if (!dirElement.isFile()) {
 			continue;
 		}
 		const filePath = dirPath + dirElement.name;
-		const s = readFileSync("./logs/access80.log").toString();
-		const stream = createWriteStream(filePath + ".ini", "utf-8");
-		const map = new Map<string, string[]>();
-		{
+		readFile(filePath).then(buffer => {
+			const s = buffer.toString();
+			const map = new Map<string, string[]>();
+			// 读取
 			const split = s.split("\n");
-			console.log(split.length);
-			split.forEach(str => {
+			console.log(`${filePath} 总行数：${split.length}`);
+			for (const str of split) {
 				const number = str.indexOf(" ");
 				const ip = str.substring(0, number);
 				const text = str.substring(number + 1);
@@ -25,9 +24,10 @@ const dirPath = "./logs/";
 				} else {
 					strings.push(text);
 				}
-			});
-		}
-		{
+			}
+			return map;
+		}).then(map => {
+			const stream = createWriteStream(filePath + ".ini", "utf-8");
 			const write = (text: string): void => {
 				if (stream.write(text)) {
 					stream.emit("drain");
@@ -41,9 +41,8 @@ const dirPath = "./logs/";
 				});
 				write("\n");
 			}
-		}
-		stream.close();
-		console.log(`${filePath}完成`);
+			stream.close();
+			console.log(`${filePath}完成`);
+		});
 	}
-	//*/
-}();
+});
