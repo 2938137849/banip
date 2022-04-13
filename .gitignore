@@ -6,3 +6,4 @@
 /logs
 *.js
 /package-lock.json
+*.yml

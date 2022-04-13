@@ -1,5 +1,5 @@
 import {createWriteStream, Dir} from "fs";
-import {opendir, readFile} from "fs/promises";
+import {opendir, readFile, writeFile} from "fs/promises";
 
 const dirPath = "./logs/";
 const regex = /(?<ip>[^ ]+) - (?<user>[^ ]+) \[(?<datetime>[^\]]+)] "(?<method>[A-Z]*) ?(?<url>[^ "]*)(?: (?<protocol>[^"]+))?" (?<status>\d+) (?<bytes>\d+) "(?<referer>[^"]*)" "(?<agent>[^"]*)"/;
@@ -12,6 +12,7 @@ opendir(dirPath).then(async (dir: Dir) => {
 		const filePath = dirPath + dirElement.name;
 		// 读取
 		const split = (await readFile(filePath)).toString().split("\n");
+		await writeFile(filePath, "");
 		console.log(`${filePath} 总行数：${split.length}`);
 		for (const str of split) {
 			const groups = regex.exec(str)?.groups;
@@ -31,7 +32,7 @@ opendir(dirPath).then(async (dir: Dir) => {
 	}
 	return map;
 }).then(map => {
-	const filePath = dirPath + "sorted.yml";
+	const filePath = "./sorted.yml";
 	const stream = createWriteStream(filePath, "utf-8");
 	const write = (text: string): void => {
 		if (stream.write(text)) {
@@ -47,7 +48,7 @@ opendir(dirPath).then(async (dir: Dir) => {
 		write("\n");
 	}
 	stream.close();
-	console.log(`${filePath}完成`);
+	console.log(`${filePath} 完成`);
 });
 
 class Log {
