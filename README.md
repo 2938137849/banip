@@ -12,7 +12,7 @@
 
 ## 3. 使用
 
-1. clone 整个仓库 
+1. clone 整个仓库
 2. `npm -g i typescript`
 3. `npm i`
 4. 将 nginx 产生的日志文件复制到本项目根目录下的 `logs` 文件夹

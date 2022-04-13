@@ -2,7 +2,7 @@ import {createWriteStream, Dir} from "fs";
 import {opendir, readFile} from "fs/promises";
 
 const dirPath = "./logs/";
-const regex = /(?<ip>[^ ]+) - (?<user>[^ ]+) \[(?<datetime>[^\]]+)] "(?<method>[A-Z]*) ?(?<url>[^ "]*)( (?<protocol>[^"]+))?" (?<status>\d+) (?<bytes>\d+) "(?<referer>[^"]*)" "(?<agent>[^"]*)"/;
+const regex = /(?<ip>[^ ]+) - (?<user>[^ ]+) \[(?<datetime>[^\]]+)] "(?<method>[A-Z]*) ?(?<url>[^ "]*)(?: (?<protocol>[^"]+))?" (?<status>\d+) (?<bytes>\d+) "(?<referer>[^"]*)" "(?<agent>[^"]*)"/;
 opendir(dirPath).then(async (dir: Dir) => {
 	const map = new Map<string, Log[]>();
 	for await (let dirElement of dir) {
