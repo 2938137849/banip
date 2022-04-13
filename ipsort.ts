@@ -2,47 +2,76 @@ import {createWriteStream, Dir} from "fs";
 import {opendir, readFile} from "fs/promises";
 
 const dirPath = "./logs/";
+const regex = /(?<ip>[^ ]+) - (?<user>[^ ]+) \[(?<datetime>[^\]]+)] "(?<method>[A-Z]*) ?(?<url>[^ "]*)( (?<protocol>[^"]+))?" (?<status>\d+) (?<bytes>\d+) "(?<referer>[^"]*)" "(?<agent>[^"]*)"/;
 opendir(dirPath).then(async (dir: Dir) => {
+	const map = new Map<string, Log[]>();
 	for await (let dirElement of dir) {
-		if (!dirElement.isFile()) {
+		if (!dirElement.isFile() || !dirElement.name.endsWith(".log")) {
 			continue;
 		}
 		const filePath = dirPath + dirElement.name;
-		readFile(filePath).then(buffer => {
-			const s = buffer.toString();
-			const map = new Map<string, string[]>();
-			// 读取
-			const split = s.split("\n");
-			console.log(`${filePath} 总行数：${split.length}`);
-			for (const str of split) {
-				const number = str.indexOf(" ");
-				const ip = str.substring(0, number);
-				const text = str.substring(number + 1);
-				const strings = map.get(ip);
-				if (strings == null) {
-					map.set(ip, [text]);
-				} else {
-					strings.push(text);
-				}
+		// 读取
+		const split = (await readFile(filePath)).toString().split("\n");
+		console.log(`${filePath} 总行数：${split.length}`);
+		for (const str of split) {
+			const groups = regex.exec(str)?.groups;
+			if (groups == null) {
+				console.log(str);
+				continue;
 			}
-			return map;
-		}).then(map => {
-			const stream = createWriteStream(filePath + ".ini", "utf-8");
-			const write = (text: string): void => {
-				if (stream.write(text)) {
-					stream.emit("drain");
-				}
-			};
-
-			for (const [ip, texts] of map) {
-				write(`[${ip}]\n`);
-				texts.forEach((text, i) => {
-					write(`${i}=${text}\n`);
-				});
-				write("\n");
+			const ip: string = groups["ip"];
+			const log: Log = new Log(dirElement.name, groups);
+			const strings = map.get(ip);
+			if (strings == null) {
+				map.set(ip, [log]);
+			} else {
+				strings.push(log);
 			}
-			stream.close();
-			console.log(`${filePath}完成`);
-		});
+		}
 	}
+	return map;
+}).then(map => {
+	const filePath = dirPath + "sorted.yml";
+	const stream = createWriteStream(filePath, "utf-8");
+	const write = (text: string): void => {
+		if (stream.write(text)) {
+			stream.emit("drain");
+		}
+	};
+
+	for (const [ip, texts] of map) {
+		write(`${ip}:\n`);
+		texts.forEach((log) => {
+			write(`  - ${JSON.stringify(log)}\n`);
+		});
+		write("\n");
+	}
+	stream.close();
+	console.log(`${filePath}完成`);
 });
+
+class Log {
+	fromFile: string;
+	user: string;
+	datetime: string;
+	method: string;
+	url: string;
+	protocol: string;
+	status: number;
+	bytes: number;
+	referer: string;
+	agent: string;
+
+	constructor(fromFile: string, groups: { [s: string]: string }) {
+		this.fromFile = fromFile;
+		this.user = groups["user"];
+		this.datetime = groups["datetime"];
+		this.method = groups["method"];
+		this.url = groups["url"];
+		this.protocol = groups["protocol"];
+		this.status = +groups["status"];
+		this.bytes = +groups["bytes"];
+		this.referer = groups["referer"];
+		this.agent = groups["agent"];
+	}
+}
